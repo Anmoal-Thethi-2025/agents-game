@@ -17,7 +17,7 @@
             max-width: 800px;
             margin: 0 auto;
             overflow: hidden;
-            height: 550px; /* Set a fixed height to contain the absolute slides */
+            height: 600px; /* Increased height for content */
         }
         .carousel-track {
             position: relative;
@@ -35,6 +35,9 @@
             opacity: 0;
             z-index: 1;
             transition: opacity 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .carousel-slide.active {
             opacity: 1;
@@ -90,6 +93,11 @@
         .nav-dot.active {
             background-color: #a0aec0;
         }
+        .scrollable-content {
+            overflow-y: auto;
+            max-height: 100%;
+            padding: 1rem;
+        }
     </style>
 </head>
 <body class="p-8">
@@ -99,16 +107,6 @@
         <p class="text-lg text-gray-300 mb-6 text-center">
             Welcome to the AI Agent Adoption Scenarios game! This activity is designed to test your understanding of "Barry's ABCs of AI Agents." You will be presented with 20 scenarios from various business functions and must decide which of the three characteristics is the most relevant for that specific use case.
         </p>
-        <div class="bg-gray-700 p-6 rounded-xl">
-            <h2 class="text-2xl font-bold text-white mb-4">Instructions:</h2>
-            <ul class="list-disc list-inside space-y-2 text-gray-300">
-                <li>Use the left and right chevrons (<span class="font-mono"> &lt; </span> and <span class="font-mono"> &gt; </span>) or the numbered dots at the bottom to navigate through the 20 scenarios.</li>
-                <li>Each scenario is presented on the front of a flip card. Click the card to reveal the correct answer and detailed feedback on the back.</li>
-                <li>Before flipping the card, select what you believe is the most suitable AI agent type from the dropdown menu.</li>
-                <li>Click the "Submit Answer" button to lock in your choice and get immediate feedback.</li>
-                <li>A score of your correct and incorrect answers will be kept. At the end, you'll receive a final assessment and resources for further learning.</li>
-            </ul>
-        </div>
     </div>
 
     <div id="game-container" class="max-w-4xl mx-auto">
@@ -150,6 +148,25 @@
 
     <script>
         const scenarios = [
+             {
+                question: "Welcome! This activity is designed to test your understanding of 'Barry's ABCs of AI Agents.' Here are the key characteristics to guide your choices.",
+                answer: "N/A",
+                feedback: `
+                    <div class="scrollable-content">
+                        <h2 class="text-2xl font-bold text-white mb-4">Instructions:</h2>
+                        <ul class="list-disc list-inside space-y-2 text-gray-300">
+                            <li>Use the left and right chevrons (<span class="font-mono"> &lt; </span> and <span class="font-mono"> &gt; </span>) or the numbered dots at the bottom to navigate through the 20 scenarios.</li>
+                            <li>Each scenario is presented on the front of a flip card. You must select an answer and click "Submit" before you can flip the card to see the correct answer.</li>
+                            <li>A score of your correct and incorrect answers will be kept. At the end, you'll receive a final assessment and resources for further learning.</li>
+                        </ul>
+                        <h3 class="text-xl font-bold text-white mt-6 mb-2">The 3 Characteristics:</h3>
+                        <p class="text-lg text-gray-300 mb-2"><strong>A. Autonomously triggered:</strong> An agent doesn’t wait for a human to say “start”; it runs in the background and jumps in whenever the need arises.</p>
+                        <p class="text-lg text-gray-300 mb-2"><strong>B. Reasoning-Based:</strong> Breaking away from the IF-THEN-ELSE logic, these agents use LLM-powered models to make complex decisions.</p>
+                        <p class="text-lg text-gray-300"><strong>C. Executing Actions:</strong> Agents can connect to external services to get things done without human intervention.</p>
+                    </div>
+                `,
+                isInstruction: true
+            },
             {
                 question: "A company wants to automate its financial reporting process, pulling data from multiple systems and generating quarterly reports.",
                 answer: "Executing Agent",
@@ -295,43 +312,52 @@
                 slide.className = `carousel-slide ${index === 0 ? 'active' : ''}`;
                 slide.id = `slide-${index}`;
                 
-                // Flip card element
-                const flipCardHtml = `
-                    <div id="flip-card-${index}" class="flip-card cursor-pointer">
-                        <div class="flip-card-inner">
-                            <div class="flip-card-front flex-col space-y-4">
-                                <h3 class="text-xl md:text-2xl font-bold text-white mb-4">Scenario ${index + 1} of 20</h3>
-                                <p class="text-lg text-gray-300 px-4">${scenario.question}</p>
-                            </div>
-                            <div class="flip-card-back flex-col space-y-4">
-                                <h3 class="text-xl md:text-2xl font-bold text-white mb-4">Correct Answer:</h3>
-                                <p class="text-lg font-bold text-emerald-400">${agentTypes[scenario.answer]}</p>
-                                <p class="text-sm text-gray-300 mt-2 text-left">${scenario.feedback}</p>
+                let slideContent;
+
+                if (scenario.isInstruction) {
+                    slideContent = `
+                        <div class="bg-gray-700 p-6 rounded-xl">
+                            <h2 class="text-2xl font-bold text-white mb-4 text-center">Instructions</h2>
+                            <div class="text-lg text-gray-300">
+                                ${scenario.feedback}
                             </div>
                         </div>
-                    </div>
-                `;
-
-                // Controls and submission
-                const controlsHtml = `
-                    <div class="flex flex-col md:flex-row items-center justify-between mt-8 p-6 bg-gray-700 rounded-xl space-y-4 md:space-y-0 md:space-x-4">
-                        <div class="w-full md:w-auto">
-                            <label for="agent-select-${index}" class="text-sm font-medium text-gray-300 block mb-2">Select the most suitable agent:</label>
-                            <select id="agent-select-${index}" class="bg-gray-800 border border-gray-600 text-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-300 ease-in-out hover:border-blue-500">
-                                <option value="" disabled selected>Choose an agent type</option>
-                                <option value="Autonomously Triggered Agent">${agentTypes['Autonomously Triggered Agent']}</option>
-                                <option value="Reasoning-Based Agent">${agentTypes['Reasoning-Based Agent']}</option>
-                                <option value="Executing Agent">${agentTypes['Executing Agent']}</option>
-                            </select>
+                    `;
+                } else {
+                    slideContent = `
+                        <div id="flip-card-${index}" class="flip-card cursor-pointer">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front flex-col space-y-4">
+                                    <h3 class="text-xl md:text-2xl font-bold text-white mb-4">Scenario ${index} of 20</h3>
+                                    <p class="text-lg text-gray-300 px-4">${scenario.question}</p>
+                                    <p class="text-sm text-gray-400 mt-4">Select an answer below to unlock the correct answer and feedback.</p>
+                                </div>
+                                <div class="flip-card-back flex-col space-y-4">
+                                    <h3 class="text-xl md:text-2xl font-bold text-white mb-4">Correct Answer:</h3>
+                                    <p class="text-lg font-bold text-emerald-400">${agentTypes[scenario.answer]}</p>
+                                    <p class="text-sm text-gray-300 mt-2 text-left">${scenario.feedback}</p>
+                                </div>
+                            </div>
                         </div>
-                        <button id="submit-btn-${index}" class="w-full md:w-auto mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105">
-                            Submit Answer
-                        </button>
-                    </div>
-                    <div id="feedback-${index}" class="mt-4 text-center font-bold text-lg hidden"></div>
-                `;
+                        <div class="flex flex-col md:flex-row items-center justify-between mt-8 p-6 bg-gray-700 rounded-xl space-y-4 md:space-y-0 md:space-x-4">
+                            <div class="w-full md:w-auto">
+                                <label for="agent-select-${index}" class="text-sm font-medium text-gray-300 block mb-2">Select the most suitable agent:</label>
+                                <select id="agent-select-${index}" class="bg-gray-800 border border-gray-600 text-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all duration-300 ease-in-out hover:border-blue-500">
+                                    <option value="" disabled selected>Choose an agent type</option>
+                                    <option value="Autonomously Triggered Agent">${agentTypes['Autonomously Triggered Agent']}</option>
+                                    <option value="Reasoning-Based Agent">${agentTypes['Reasoning-Based Agent']}</option>
+                                    <option value="Executing Agent">${agentTypes['Executing Agent']}</option>
+                                </select>
+                            </div>
+                            <button id="submit-btn-${index}" class="w-full md:w-auto mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform duration-300 ease-in-out transform hover:scale-105">
+                                Submit Answer
+                            </button>
+                        </div>
+                        <div id="feedback-${index}" class="mt-4 text-center font-bold text-lg hidden"></div>
+                    `;
+                }
 
-                slide.innerHTML = flipCardHtml + controlsHtml;
+                slide.innerHTML = slideContent;
                 carouselTrack.appendChild(slide);
 
                 // Dot navigation
@@ -359,14 +385,6 @@
                 }
             });
         }
-
-        function flipCard(index) {
-            const card = document.getElementById(`flip-card-${index}`);
-            if (card) {
-                card.classList.toggle('flipped');
-                flipCardState[index] = card.classList.contains('flipped');
-            }
-        }
         
         function updateUIOnSubmit(index) {
             const selectEl = document.getElementById(`agent-select-${index}`);
@@ -389,7 +407,7 @@
             gameContainer.classList.add('hidden');
             resultsContainer.classList.remove('hidden');
 
-            const totalQuestions = scenarios.length;
+            const totalQuestions = scenarios.length - 1; // Subtract 1 for the instructions slide
             const percentage = (correctAnswers / totalQuestions) * 100;
 
             scoreDisplay.textContent = `${percentage.toFixed(0)}%`;
@@ -447,7 +465,8 @@
             
             updateUIOnSubmit(index);
 
-            if (answeredSlides.size === scenarios.length) {
+            // Wait a moment for the card flip to be visible before showing results
+            if (answeredSlides.size === scenarios.length - 1) {
                 setTimeout(showResults, 1000);
             }
         }
@@ -467,11 +486,12 @@
 
             carouselTrack.addEventListener('click', (event) => {
                 const flipCard = event.target.closest('.flip-card');
-                if (flipCard && !answeredSlides.has(currentSlide)) {
-                    flipCard.classList.toggle('flipped');
-                } else if (flipCard && answeredSlides.has(currentSlide)) {
-                     // Allow flipping back and forth after answer is submitted
-                     flipCard.classList.toggle('flipped');
+                if (flipCard) {
+                    const index = parseInt(flipCard.id.split('-')[2]);
+                    // Only allow flipping if the question has been answered
+                    if (answeredSlides.has(index)) {
+                        flipCard.classList.toggle('flipped');
+                    }
                 }
             });
 
@@ -482,7 +502,6 @@
                 });
             });
         };
-
     </script>
 </body>
 </html>
